@@ -23,7 +23,6 @@ public class BitmapStore extends AppCompatActivity{
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
 
         Bitmap bitmap = null;
-        //   ImageView imageView = (ImageView) findViewById(R.id.imageView);
 
         switch(requestCode) {
             case GALLERY_REQUEST:

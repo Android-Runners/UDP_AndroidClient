@@ -6,25 +6,28 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 
 public class MainActivity extends AppCompatActivity {
-    ImageView im1, im2;
-    TextView text;
-    EditText ed, address;
-    Button toStorage;
-    static final int GALLERY_REQUEST = 1;
-    Bitmap bitRes;
+    private ImageView im1, im2;
+    private TextView text, textID;
+    private EditText address, port, ID;
+    private static final int GALLERY_REQUEST = 1;
+    private Bitmap bitRes;
+    private DatagramSocket datagramSocket;
+    private Boolean isInit = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,25 +35,57 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        try {
+            datagramSocket = new DatagramSocket();
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
         final MainActivity main = this;
         im1 = (ImageView)findViewById(R.id.imageView1);
         im2 = (ImageView)findViewById(R.id.imageView2);
-        text = (TextView)findViewById(R.id.textView);
-        toStorage = (Button)findViewById(R.id.button);
+        textID = (TextView)findViewById(R.id.textID);
+        address = (EditText)findViewById(R.id.editText);
+        port = (EditText)findViewById(R.id.editText2);
+        ID = (EditText)findViewById(R.id.editText3);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab1);
+        final FloatingActionButton init = (FloatingActionButton) findViewById(R.id.fab2);
+        final FloatingActionButton toStore = (FloatingActionButton) findViewById(R.id.fab3);
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ed = (EditText)findViewById(R.id.editText);
-                address = (EditText)findViewById(R.id.editText2);
-                new Thread(new Client(im1, im2, text, ed.getText()+"", address.getText()+"", main)).start();
+                if(isInit)
+                    new Thread(new Client(im1, im2, ID.getText()+"", port.getText()+"", address.getText()+"", datagramSocket, main)).start();
+                else
+                    Snackbar.make(view, "Ви ще не ініціалізовані", Snackbar.LENGTH_LONG)
+                            .setAction("Попередження", null).show();
             }
         });
-        toStorage.setOnClickListener(new View.OnClickListener() {
+        toStore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 im1.setImageBitmap(getBitStorage());
+            }
+        });
+        init.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    if(!isInit) {
+                        Initialization initialization = new Initialization(address.getText() + "", port.getText() + "", datagramSocket, textID, main);
+                        Thread th = new Thread(initialization);
+                        th.start();
+                        th.join();
+                        textID.setText("Ваш ID: " + initialization.getNumber());
+                        new Thread(new Resender(datagramSocket, im2, textID, main)).start();
+                        isInit = true;
+                    }else
+                        Snackbar.make(v, "Ви вже ініціалізовані", Snackbar.LENGTH_LONG)
+                                .setAction("Попередження", null).show();
+                }catch(Exception io){
+                    textID.setText(io.getMessage());
+                }
             }
         });
     }
@@ -66,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
 
         Bitmap bitmap = null;
-        //   ImageView imageView = (ImageView) findViewById(R.id.imageView);
 
         switch(requestCode) {
             case GALLERY_REQUEST:
@@ -77,7 +111,6 @@ public class MainActivity extends AppCompatActivity {
                         bitRes = bitmap;
                         im1.setImageBitmap(bitmap);
                     } catch (IOException e) {
-                        toStorage.setText(e.getMessage());
                     }
                 }
         }
