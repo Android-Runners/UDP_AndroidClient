@@ -22,9 +22,6 @@ public class Client implements Runnable{
         //"192.168.1.101"
         //46.98.191.197
         try {
-        //    changeText("Клієнт розпочато");
-          //  changeText("In client");
-           // datagramSocket.setBroadcast(true);
             InetAddress IPAddress = InetAddress.getByName(address);
             byte[] sendData = new byte[202400];
             Bitmap bitmap = ((BitmapDrawable) im1.getDrawable()).getBitmap();
@@ -33,13 +30,8 @@ public class Client implements Runnable{
             //отправляю сам массив, конвертированный из битмапа - С СЖАТИЕМ
             DatagramPacket sendPacket = new DatagramPacket(sendData, sizeSend, InetAddress.getByName(address), Integer.valueOf(port));
             datagramSocket.send(sendPacket);
-        //    changeText(sendPacket.getAddress() + " " + sendPacket.getPort());
-            //принимаю массив
-        //    changeText("Перед приемом");
 
-        }catch(Exception e){
-         //   changeText("" + e.getMessage() + " kek");
-        }
+        }catch(Exception e){}
     }
     private int toSizeFromByte(byte[] b, int length){
         int ans = 0;
