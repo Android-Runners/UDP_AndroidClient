@@ -2,6 +2,8 @@ package com.example.androidclientudp;
 
 import android.widget.TextView;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -13,6 +15,20 @@ public class Initialization implements Runnable{
     private byte number;
     private TextView textID;
     private MainActivity main;
+
+    public static ObjectInputStream getInput() {
+        return input;
+    }
+
+    static private ObjectInputStream input;
+
+    public static ObjectOutputStream getOutput() {
+        return output;
+    }
+
+    static private ObjectOutputStream output;
+
+
 
     public static Socket getSocket() {
         return socket;
@@ -45,9 +61,11 @@ public class Initialization implements Runnable{
     public void run() {
         try {
             InetAddress IPAddress = InetAddress.getByName(address);
-            changeText("Before init");
+          //  changeText("Before init");
             socket = new Socket(IPAddress, Integer.valueOf(port));
-            changeText("After init. " + IPAddress + " " + port);
+            input = new ObjectInputStream(socket.getInputStream());
+            output = new ObjectOutputStream(socket.getOutputStream());
+           // changeText("After init. " + IPAddress + " " + port);
         }catch(Exception e){
             changeText(e.getMessage());
         }

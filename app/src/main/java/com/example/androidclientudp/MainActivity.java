@@ -22,6 +22,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import java.net.DatagramSocket;
@@ -80,13 +81,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                try {
-                  /* if(!isInit){
+                   if(!isInit){
                        Toast.makeText(getApplicationContext(), "Ви ще не ініціалізовані", Toast.LENGTH_SHORT).show();
-                   }else {*/
+                   }else {
                        if (recordService.isRunning()) {
                            recordService.stopRecord();
-                           Fromfile fromFile = new Fromfile(mainActivity, port.getText() + "", address.getText() + "", recordService.getPathVideo(), textID, videoView, ID.getText() + "", socket);
-                           textID.setText("91");
+                           Fromfile fromFile = new Fromfile(mainActivity, Initialization.getSocket(), Initialization.getInput(), Initialization.getOutput(), recordService.getPathVideo(), textID, videoView, ID.getText() + "");
+                         //  textID.setText("91");
                            Thread thread = new Thread(fromFile);
                            thread.start();
                            thread.join();
@@ -95,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                            Intent captureIntent = projectionManager.createScreenCaptureIntent();
                            startActivityForResult(captureIntent, RECORD_REQUEST_CODE);
                        }
-                 //  }
+                   }
                }catch (Exception e) {
                     textID.setText(e.getMessage());
                }
@@ -115,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
                     thread.start();
                     thread.join();
                     isInit = true;
+                    textID.setText((Initialization.getSocket().getPort()) + " " + (Initialization.getSocket().getInetAddress()));
                 }catch(Exception e) {}
             }
         });

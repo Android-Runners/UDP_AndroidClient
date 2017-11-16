@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -51,11 +50,12 @@ public class Fromfile implements Runnable{
         this.socket = socket;
     }
 
-    public Fromfile(MainActivity mainActivity, String port, String address, String path, TextView textView, VideoView videoView, String ID) {
+    public Fromfile(MainActivity mainActivity, Socket socket, ObjectInputStream input, ObjectOutputStream output, String path, TextView textView, VideoView videoView, String ID) {
         this.mainActivity = mainActivity;
         this.path = path;
-        this.address = address;
-        this.port = port;
+        this.input = input;
+        this.output = output;
+        this.socket = socket;
         this.textView = textView;
         this.videoView = videoView;
         this.ID = ID;
@@ -112,15 +112,7 @@ public class Fromfile implements Runnable{
     @Override
     public void run() {
         try {
-           //socket = Initialization.getSocket();
-            if(socket == null){
-                changeText("117");
-                socket = new Socket(InetAddress.getByName(address), Integer.valueOf(port));
-            }
-            changeText("110");
-            input = new ObjectInputStream(socket.getInputStream());
-            output = new ObjectOutputStream(socket.getOutputStream());
-            changeText("113");
+           // changeText("113");
             new Thread(new Resender(input, output, textView, videoView, socket, mainActivity)).start();
             File file = new File(path);
             if(!file.exists()) file.createNewFile();
