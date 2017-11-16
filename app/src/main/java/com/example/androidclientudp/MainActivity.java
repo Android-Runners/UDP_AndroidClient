@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textView;
     private Socket socket;
     private Fromfile fromFile;
+    private TextView yourId;
     private boolean isInit = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,9 +66,9 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         final MainActivity main = this;
+        yourId = (TextView)findViewById(R.id.YourId);
         textIP = (TextView)findViewById(R.id.textView2);
         videoView = (VideoView)findViewById(R.id.videoView);
-        im1 = (ImageView)findViewById(R.id.imageView1);
         textID = (TextView)findViewById(R.id.textID);
         address = (EditText)findViewById(R.id.editText);
         port = (EditText)findViewById(R.id.editText2);
@@ -75,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         mainActivity = this;
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab1);
         final FloatingActionButton init = (FloatingActionButton) findViewById(R.id.fab2);
-        final FloatingActionButton toStore = (FloatingActionButton) findViewById(R.id.fab3);
+     //   final FloatingActionButton toStore = (FloatingActionButton) findViewById(R.id.fab3);
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
                    }else {
                        if (recordService.isRunning()) {
                            recordService.stopRecord();
+                           textID.setText(R.string.start_record);
                            Fromfile fromFile = new Fromfile(mainActivity, Initialization.getSocket(), Initialization.getInput(), Initialization.getOutput(), recordService.getPathVideo(), textID, videoView, ID.getText() + "");
                          //  textID.setText("91");
                            Thread thread = new Thread(fromFile);
@@ -102,21 +104,24 @@ public class MainActivity extends AppCompatActivity {
                }
             }
         });
-        toStore.setOnClickListener(new View.OnClickListener() {
+    /*    toStore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 im1.setImageBitmap(getBitStorage());
             }
-        });
+        });*/
         init.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
-                    Thread thread = new Thread(new Initialization(address.getText() + "", port.getText() + "", textID, mainActivity));
-                    thread.start();
-                    thread.join();
-                    isInit = true;
-                    textID.setText((Initialization.getSocket().getPort()) + " " + (Initialization.getSocket().getInetAddress()));
+                    if(isInit)
+                        Toast.makeText(getApplicationContext(), "Ви вже ініціалізовані", Toast.LENGTH_SHORT).show();
+                    else {
+                        Thread thread = new Thread(new Initialization(address.getText() + "", port.getText() + "", textID, yourId, mainActivity));
+                        thread.start();
+                        thread.join();
+                        isInit = true;
+                    }
                 }catch(Exception e) {}
             }
         });

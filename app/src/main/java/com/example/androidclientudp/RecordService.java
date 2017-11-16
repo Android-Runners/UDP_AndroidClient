@@ -85,15 +85,15 @@ public class RecordService extends Service {
             if (!running) {
                 return false;
             }
+        running = false;
             while(true) {
                 try {
-                    running = false;
                     mediaRecorder.stop();
-                    // mediaRecorder.reset();
+                    mediaRecorder.reset();
                     virtualDisplay.release();
                     mediaProjection.stop();
                     break;
-                } catch (Exception e) {
+                } catch (Throwable th) {
                 }
             }
             return true;
@@ -115,9 +115,9 @@ public class RecordService extends Service {
         mediaRecorder.setVideoSize(width, height); // размер видео
         mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264); // Кодировщик видео
    //     mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB); // кодировщик аудио
-        mediaRecorder.setVideoEncodingBitRate(1024 * 5 * 400); // устанавливает "битрэйт" файла записи. Прописано - 5 мегабит
+        mediaRecorder.setVideoEncodingBitRate(1024 * 5); // устанавливает "битрэйт" файла записи. Прописано - 5 мегабит
         // 409600 бит - кодирование H264
-        mediaRecorder.setVideoFrameRate(20); // частотак кадров в секунду
+        mediaRecorder.setVideoFrameRate(35); // частотак кадров в секунду
         try {
             mediaRecorder.prepare(); // подготавливает для записи и кодирования данных
         } catch (IOException e) {

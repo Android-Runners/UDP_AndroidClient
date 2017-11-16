@@ -1,7 +1,9 @@
 package com.example.androidclientudp;
 
+import android.app.AlertDialog;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Environment;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.VideoView;
@@ -53,39 +55,53 @@ public class Resender implements Runnable {
         System.arraycopy(b, 0, t, a.length, b.length);
         return t;
     }
+    private boolean check(Object object){
+        byte[] receiveData = (byte[])object;
+        if(receiveData.length == 88 && (receiveData[0]) == -1) {
+            receiveData = remove(receiveData, 0);
+            changeText(new String(receiveData));
+            AlertDialog.Builder builder = new AlertDialog.Builder(main);
+            return true;
+        }
+        return false;
+    }
     @Override
     public void run() {
         try {
             Date date = new Date();
-            File file = new File("/storage/emulated/0/ScreenRecord/" + date.getTime() + ".mp4");
+            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScreenRecord" + "/" + date.getTime() + ".mp4");
             if(file.exists()) {
                 file.delete();
-                file = new File("/storage/emulated/0/ScreenRecord/" + date.getTime() + ".mp4");
+                file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScreenRecord" + "/" + date.getTime() + ".mp4");
             }
             file.createNewFile();
             Object sizeOfFile = input.readObject();
-            String sizeString = new String((byte[])sizeOfFile);
-            sizeOfFile = (Integer.valueOf(sizeString));
-            FileOutputStream fos = new FileOutputStream(file, false);
-            Integer sum = 0;
-            byte[] answerArray = null;
-            while(true){
-                Object toGet = input.readObject();
-                byte[] receiveByte = (byte[])toGet;
-                sum += receiveByte.length;
-                if(sum == receiveByte.length)
-                    answerArray = receiveByte;
-                else
-                    answerArray = concat(answerArray, receiveByte);
-                if(sum >= (Integer)sizeOfFile)
-                    break;
+            if(!check(sizeOfFile)) {
+                String sizeString = new String((byte[]) sizeOfFile);
+                sizeOfFile = (Integer.valueOf(sizeString));
+                FileOutputStream fos = new FileOutputStream(file, false);
+                Integer sum = 0;
+                byte[] answerArray = null;
+                while (true) {
+                    Object toGet = input.readObject();
+                    if(!check(toGet)) {
+                        byte[] receiveByte = (byte[]) toGet;
+                        sum += receiveByte.length;
+                        if (sum == receiveByte.length)
+                            answerArray = receiveByte;
+                        else
+                            answerArray = concat(answerArray, receiveByte);
+                        if (sum >= (Integer) sizeOfFile)
+                            break;
+                    }
+                }
+                // changeText(answerArray.length + " Res");
+                fos.write(answerArray);
+                fos.flush();
+                fos.close();
+                //changeText(file.length() + " name(Resender): " + file.getName());
+                playVideo(file.getAbsolutePath());
             }
-           // changeText(answerArray.length + " Res");
-            fos.write(answerArray);
-            fos.flush();
-            fos.close();
-            //changeText(file.length() + " name(Resender): " + file.getName());
-            playVideo(file.getAbsolutePath());
         }catch(Exception e){}
     }
 

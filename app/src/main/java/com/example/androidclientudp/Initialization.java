@@ -22,6 +22,12 @@ public class Initialization implements Runnable{
 
     static private ObjectInputStream input;
 
+    public static Integer getMyId() {
+        return myId;
+    }
+
+    static private Integer myId;
+
     public static ObjectOutputStream getOutput() {
         return output;
     }
@@ -43,10 +49,13 @@ public class Initialization implements Runnable{
     public Boolean getisAll(){ return isAll; }
     public DatagramSocket getClientSocket() { return clientSocket; }
 
-    public Initialization(String address, String port, TextView textID, MainActivity main) {
+    private TextView yourId;
+
+    public Initialization(String address, String port, TextView textID, TextView yourId, MainActivity main) {
         this.address = address;
         this.port = port;
         this.textID = textID;
+        this.yourId = yourId;
         this.main = main;
     }
     private void changeText(final String s){
@@ -57,15 +66,24 @@ public class Initialization implements Runnable{
             }
         });
     }
+    private void changeTextID(final String s){
+        main.runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+            yourId.setText(s);
+        }
+    });
+    }
     @Override
     public void run() {
         try {
             InetAddress IPAddress = InetAddress.getByName(address);
-          //  changeText("Before init");
             socket = new Socket(IPAddress, Integer.valueOf(port));
             input = new ObjectInputStream(socket.getInputStream());
             output = new ObjectOutputStream(socket.getOutputStream());
-           // changeText("After init. " + IPAddress + " " + port);
+            myId = (Integer)input.readObject();
+            changeText("Вас зареєстровано на сервері");
+            changeTextID("Ваш ID:\n" + myId);
         }catch(Exception e){
             changeText(e.getMessage());
         }
