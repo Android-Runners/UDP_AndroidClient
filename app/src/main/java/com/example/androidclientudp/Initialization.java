@@ -2,9 +2,9 @@ package com.example.androidclientudp;
 
 import android.widget.TextView;
 
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.Socket;
 
 public class Initialization implements Runnable{
     private String port, address;
@@ -14,16 +14,22 @@ public class Initialization implements Runnable{
     private TextView textID;
     private MainActivity main;
 
+    public static Socket getSocket() {
+        return socket;
+    }
+
+    static private Socket socket;
+
+
     public byte getNumber() {
         return number;
     }
     public Boolean getisAll(){ return isAll; }
     public DatagramSocket getClientSocket() { return clientSocket; }
 
-    public Initialization(String address, String port, DatagramSocket datagramSocket, TextView textID, MainActivity main) {
+    public Initialization(String address, String port, TextView textID, MainActivity main) {
         this.address = address;
         this.port = port;
-        this.clientSocket = datagramSocket;
         this.textID = textID;
         this.main = main;
     }
@@ -39,13 +45,9 @@ public class Initialization implements Runnable{
     public void run() {
         try {
             InetAddress IPAddress = InetAddress.getByName(address);
-            isAll = true;
-            byte[] mas = new byte[1];
-            DatagramPacket packet = new DatagramPacket(mas, 1, IPAddress, Integer.valueOf(port));
-            clientSocket.send(packet);
-            clientSocket.receive(packet);
-            number = packet.getData()[0];
-
+            changeText("Before init");
+            socket = new Socket(IPAddress, Integer.valueOf(port));
+            changeText("After init. " + IPAddress + " " + port);
         }catch(Exception e){
             changeText(e.getMessage());
         }

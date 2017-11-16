@@ -1,13 +1,11 @@
 package com.example.androidclientudp;
 
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 
 public class Client implements Runnable{
     private ImageView im1, im2;
@@ -16,12 +14,25 @@ public class Client implements Runnable{
     private String port,address;
     private Bitmap screen;
     private DatagramSocket datagramSocket;
+    private TextView textView;
+    private byte[] receiveData = new byte[202400], sendData = new byte[202400];
     @Override
     public void run() {
         // "0.tcp.ngrok.io"
         //"192.168.1.101"
         //46.98.191.197
         try {
+           // Bitmap bitmap = ((BitmapDrawable) im1.getDrawable()).getBitmap();
+           // sendData = bitmapToByteArray(bitmap);
+            /*sendData = frm.getByteArray();
+            Integer sizeSend = sendData.length;
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sizeSend, InetAddress.getByName(address), Integer.valueOf(port));
+            datagramSocket.send(sendPacket);
+
+            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            datagramSocket.receive(receivePacket);
+            changeIm(BitmapFactory.decodeByteArray(frm.getByteArray(), 0, frm.getSize()));*/
+            /*
             InetAddress IPAddress = InetAddress.getByName(address);
             byte[] sendData = new byte[202400];
             Bitmap bitmap = ((BitmapDrawable) im1.getDrawable()).getBitmap();
@@ -29,7 +40,7 @@ public class Client implements Runnable{
             Integer sizeSend = sendData.length;
             //отправляю сам массив, конвертированный из битмапа - С СЖАТИЕМ
             DatagramPacket sendPacket = new DatagramPacket(sendData, sizeSend, InetAddress.getByName(address), Integer.valueOf(port));
-            datagramSocket.send(sendPacket);
+            datagramSocket.send(sendPacket);*/
 
         }catch(Exception e){}
     }
@@ -76,8 +87,9 @@ public class Client implements Runnable{
         return concat(toNumber,mas);
     }
     public Client(){}
-    public Client(ImageView im1, ImageView im2, String ID, String port, String address, DatagramSocket datagramSocket, MainActivity main){
+    public Client(ImageView im1, ImageView im2, String ID, String port, String address, DatagramSocket datagramSocket, TextView textView, MainActivity main){
         this.im1 = im1;
+        this.textView = textView;
         this.im2 = im2;
         this.port = port;
         this.address = address;
