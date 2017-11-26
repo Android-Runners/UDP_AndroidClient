@@ -1,5 +1,6 @@
 package com.example.androidclientudp;
 
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.VideoView;
 
@@ -8,7 +9,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramSocket;
@@ -61,6 +61,11 @@ public class Fromfile implements Runnable{
         this.ID = ID;
     }
 
+    public void setCont(boolean cont) {
+        isCont = cont;
+    }
+
+    private boolean isCont = true;
     private boolean isInit;
     private String ID;
     private VideoView videoView;
@@ -110,19 +115,20 @@ public class Fromfile implements Runnable{
         return t;
     }
     @Override
-    public void run() {
+    public synchronized void run() {
         try {
-           // changeText("113");
-            new Thread(new Resender(input, output, textView, videoView, socket, mainActivity)).start();
+            if(!isCont) return;
+            Log.e("kek", path);
             File file = new File(path);
             if(!file.exists()) file.createNewFile();
             FileInputStream fis = new FileInputStream(file.getPath());
             long s = file.length();
-            size = new Integer((int) s);
+            size = (int) s;
             String stringSize = String.valueOf(size);
             output.writeObject(concat(new byte[]{Byte.valueOf(ID)}, String.valueOf(size).getBytes()));
             Integer i = size;
             while (fis.available() != 0) {
+                if(!isCont) return;
                 size = (int)(fis.available());
                 if(size < byteArray.length)
                     byteArray = new byte[size];
@@ -134,7 +140,7 @@ public class Fromfile implements Runnable{
             }
             fis.close();
 
-        }catch(IOException e) {
+        }catch(Throwable e) {
             changeText(e.getMessage());
         }
     }

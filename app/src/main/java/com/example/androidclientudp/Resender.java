@@ -68,15 +68,16 @@ public class Resender implements Runnable {
     @Override
     public void run() {
         try {
-            Date date = new Date();
-            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScreenRecord" + "/" + date.getTime() + ".mp4");
-            if(file.exists()) {
-                file.delete();
-                file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScreenRecord" + "/" + date.getTime() + ".mp4");
-            }
-            file.createNewFile();
-            Object sizeOfFile = input.readObject();
-            if(!check(sizeOfFile)) {
+            while(true) {
+                Date date = new Date();
+                File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScreenRecord" + "/" + date.getTime() + ".mp4");
+                if (file.exists()) {
+                    file.delete();
+                    file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScreenRecord" + "/" + date.getTime() + ".mp4");
+                }
+                file.createNewFile();
+                Object sizeOfFile = input.readObject();
+                //  if(!check(sizeOfFile)) {
                 String sizeString = new String((byte[]) sizeOfFile);
                 sizeOfFile = (Integer.valueOf(sizeString));
                 FileOutputStream fos = new FileOutputStream(file, false);
@@ -84,23 +85,22 @@ public class Resender implements Runnable {
                 byte[] answerArray = null;
                 while (true) {
                     Object toGet = input.readObject();
-                    if(!check(toGet)) {
-                        byte[] receiveByte = (byte[]) toGet;
-                        sum += receiveByte.length;
-                        if (sum == receiveByte.length)
-                            answerArray = receiveByte;
-                        else
-                            answerArray = concat(answerArray, receiveByte);
-                        if (sum >= (Integer) sizeOfFile)
-                            break;
-                    }
+                    //  if(!check(toGet)) {
+                    byte[] receiveByte = (byte[]) toGet;
+                    sum += receiveByte.length;
+                    if (sum == receiveByte.length)
+                        answerArray = receiveByte;
+                    else
+                        answerArray = concat(answerArray, receiveByte);
+                    if (sum >= (Integer) sizeOfFile)
+                        break;
                 }
-                // changeText(answerArray.length + " Res");
                 fos.write(answerArray);
                 fos.flush();
                 fos.close();
-                //changeText(file.length() + " name(Resender): " + file.getName());
+             //   changeText(file.length() + " name(Resender): " + file.getName());
                 playVideo(file.getAbsolutePath());
+
             }
         }catch(Exception e){}
     }

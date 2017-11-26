@@ -16,6 +16,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -52,6 +53,9 @@ public class MainActivity extends AppCompatActivity {
     private Fromfile fromFile;
     private TextView yourId;
     private boolean isInit = false;
+    private MyTimer myTimer;
+    private Thread thread;
+    private Boolean isFirstDone = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,14 +81,65 @@ public class MainActivity extends AppCompatActivity {
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab1);
         final FloatingActionButton init = (FloatingActionButton) findViewById(R.id.fab2);
      //   final FloatingActionButton toStore = (FloatingActionButton) findViewById(R.id.fab3);
-
         fab.setOnClickListener(new View.OnClickListener() {
+            boolean bool = false;
             @Override
             public void onClick(View view) {
-               try {
+                if(!isInit){
+                    Toast.makeText(getApplicationContext(), "Ви ще не ініціалізовані", Toast.LENGTH_SHORT).show();
+                }else {
+                    new Thread(new Runnable() {
+                        int seconds = 1;
+                        @Override
+                        public void run() {
+                            while(true){
+                              try {
+                                    if(seconds % 3 == 0 && seconds % 2 == 0){
+                                      //  if(!isFirstDone) {
+                                            Intent captureIntent = projectionManager.createScreenCaptureIntent();
+                                            startActivityForResult(captureIntent, RECORD_REQUEST_CODE);
+                                      /*  }else {
+                                            try {
+                                                recordService.startRecord();
+                                            }catch(Exception e){
+                                                textIP.setText(e.getMessage());
+                                            }
+                                            textID.setText(R.string.stop_record);
+                                        }*/
+                                    }
+                                    Thread.sleep(1000);
+                                    seconds++;
+                                    if(seconds % 3 == 0 && seconds % 2 == 1) {
+                                        recordService.stopRecord();
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public synchronized void run() {
+                                                textID.setText(R.string.start_record);
+                                            }
+                                        });
+                                        Fromfile fromFile = new Fromfile(mainActivity, Initialization.getSocket(), Initialization.getInput(), Initialization.getOutput(), recordService.getPathVideo(), textID, videoView, ID.getText() + "");
+                                        Thread thread = new Thread(fromFile);
+                                        thread.start();
+                                        thread.join();
+                                        fromFile.setCont(false);
+                                        //return;
+                                    }
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }catch(Throwable e){
+                                    Log.e("Опа", e.getMessage());
+                                }
+                            }
+                        }
+                    }).start();
+                }
+
+
+               /*try {
                    if(!isInit){
                        Toast.makeText(getApplicationContext(), "Ви ще не ініціалізовані", Toast.LENGTH_SHORT).show();
                    }else {
+                      // new Thread(new Resender(Initialization.getInput(), Initialization.getOutput(), textView, videoView, Initialization.getSocket(), mainActivity)).start();
                        if (recordService.isRunning()) {
                            recordService.stopRecord();
                            textID.setText(R.string.start_record);
@@ -92,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
                          //  textID.setText("91");
                            Thread thread = new Thread(fromFile);
                            thread.start();
-                           thread.join();
+                          // thread.join();
 
                        } else {
                            Intent captureIntent = projectionManager.createScreenCaptureIntent();
@@ -101,7 +156,10 @@ public class MainActivity extends AppCompatActivity {
                    }
                }catch (Exception e) {
                     textID.setText(e.getMessage());
-               }
+               }*/
+
+
+
             }
         });
     /*    toStore.setOnClickListener(new View.OnClickListener() {
@@ -115,12 +173,13 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 try {
                     if(isInit)
-                        Toast.makeText(getApplicationContext(), "Ви вже ініціалізовані", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Ви вже ініціалізовані на сервері", Toast.LENGTH_SHORT).show();
                     else {
-                        Thread thread = new Thread(new Initialization(address.getText() + "", port.getText() + "", textID, yourId, mainActivity));
+                        Thread thread = new Thread(new Initialization(address.getText() + "", port.getText() + "", textID, yourId, mainActivity, videoView));
                         thread.start();
                         thread.join();
                         isInit = true;
+                        Toast.makeText(getApplicationContext(), "Ви ініціалізувалися на сервері", Toast.LENGTH_SHORT).show();
                     }
                 }catch(Exception e) {}
             }
@@ -133,6 +192,8 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, RecordService.class);
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
+
+
 
     @Override
     protected void onDestroy() {
@@ -150,11 +211,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
-
+     //   recordService = new RecordService();
         if (requestCode == RECORD_REQUEST_CODE && resultCode == RESULT_OK) {
             mediaProjection = projectionManager.getMediaProjection(resultCode, imageReturnedIntent);
             recordService.setMediaProject(mediaProjection);
             recordService.startRecord();
+            isFirstDone = true;
             textID.setText(R.string.stop_record);
         }
     }

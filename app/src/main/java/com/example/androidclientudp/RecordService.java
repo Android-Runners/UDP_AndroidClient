@@ -14,7 +14,6 @@ import android.view.Surface;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.IOException;
 
 public class RecordService extends Service {
     private MediaProjection mediaProjection;
@@ -80,7 +79,14 @@ public class RecordService extends Service {
         running = true;
         return true;
     }
-
+    public boolean startRecord2(){
+        if (mediaProjection == null || running) {
+            return false;
+        }
+        mediaRecorder.start();
+        running = true;
+        return true;
+    }
     public boolean stopRecord() {
             if (!running) {
                 return false;
@@ -120,7 +126,7 @@ public class RecordService extends Service {
         mediaRecorder.setVideoFrameRate(35); // частотак кадров в секунду
         try {
             mediaRecorder.prepare(); // подготавливает для записи и кодирования данных
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -136,7 +142,7 @@ public class RecordService extends Service {
                 }
             }
 
-            Toast.makeText(getApplicationContext(), rootDir, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Запис екрану розпочато", Toast.LENGTH_SHORT).show();
 
             return rootDir;
         } else {
