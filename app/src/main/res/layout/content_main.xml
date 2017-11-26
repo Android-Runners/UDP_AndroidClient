@@ -136,9 +136,16 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="fill_parent"
-                    android:layout_weight="1"></LinearLayout>
+                    android:layout_weight="1">
 
-                <VideoView
+                    <Button
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:id="@+id/knopka"/>
+
+                </LinearLayout>
+
+                <SurfaceView
                     android:id="@+id/videoView"
                     android:layout_width="0dp"
                     android:layout_height="fill_parent"

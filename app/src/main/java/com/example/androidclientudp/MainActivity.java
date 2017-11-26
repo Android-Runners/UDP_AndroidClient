@@ -10,21 +10,22 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private MediaProjection mediaProjection; // Токен, позволяющий приложению захватить содержимое экрана, или аудио
     private RecordService recordService;
     private MainActivity mainActivity;
-    private VideoView videoView;
+    private SurfaceView videoView;
     private ServerSocket serverSocket;
     private TextView textIP;
     private TextView textView;
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private MyTimer myTimer;
     private Thread thread;
     private Boolean isFirstDone = false;
+    private Intent captureIntent;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,6 +65,12 @@ public class MainActivity extends AppCompatActivity {
         projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        Button knopka = (Button) findViewById(R.id.knopka);
+
+        knopka.setOnClickListener((v) -> {
+            new Thread(new Resender(videoView, socket, this)).start();
+        });
 
         try {
             datagramSocket = new DatagramSocket();
@@ -72,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
         final MainActivity main = this;
         yourId = (TextView)findViewById(R.id.YourId);
         textIP = (TextView)findViewById(R.id.textView2);
-        videoView = (VideoView)findViewById(R.id.videoView);
+        videoView = (SurfaceView) findViewById(R.id.videoView);
         textID = (TextView)findViewById(R.id.textID);
         address = (EditText)findViewById(R.id.editText);
         port = (EditText)findViewById(R.id.editText2);
@@ -81,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab1);
         final FloatingActionButton init = (FloatingActionButton) findViewById(R.id.fab2);
      //   final FloatingActionButton toStore = (FloatingActionButton) findViewById(R.id.fab3);
+        captureIntent = projectionManager.createScreenCaptureIntent();
         fab.setOnClickListener(new View.OnClickListener() {
             boolean bool = false;
             @Override
@@ -88,50 +97,22 @@ public class MainActivity extends AppCompatActivity {
                 if(!isInit){
                     Toast.makeText(getApplicationContext(), "Ви ще не ініціалізовані", Toast.LENGTH_SHORT).show();
                 }else {
-                    new Thread(new Runnable() {
-                        int seconds = 1;
-                        @Override
-                        public void run() {
-                            while(true){
-                              try {
-                                    if(seconds % 3 == 0 && seconds % 2 == 0){
-                                      //  if(!isFirstDone) {
-                                            Intent captureIntent = projectionManager.createScreenCaptureIntent();
-                                            startActivityForResult(captureIntent, RECORD_REQUEST_CODE);
-                                      /*  }else {
-                                            try {
-                                                recordService.startRecord();
-                                            }catch(Exception e){
-                                                textIP.setText(e.getMessage());
-                                            }
-                                            textID.setText(R.string.stop_record);
-                                        }*/
-                                    }
-                                    Thread.sleep(1000);
-                                    seconds++;
-                                    if(seconds % 3 == 0 && seconds % 2 == 1) {
-                                        recordService.stopRecord();
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public synchronized void run() {
-                                                textID.setText(R.string.start_record);
-                                            }
-                                        });
-                                        Fromfile fromFile = new Fromfile(mainActivity, Initialization.getSocket(), Initialization.getInput(), Initialization.getOutput(), recordService.getPathVideo(), textID, videoView, ID.getText() + "");
-                                        Thread thread = new Thread(fromFile);
-                                        thread.start();
-                                        thread.join();
-                                        fromFile.setCont(false);
-                                        //return;
-                                    }
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }catch(Throwable e){
-                                    Log.e("Опа", e.getMessage());
-                                }
-                            }
-                        }
-                    }).start();
+                    if (recordService.isRunning()) {
+                        recordService.stopRecord();
+                        textID.setText(R.string.start_record);
+//                        Fromfile fromFile = new Fromfile(mainActivity, Initialization.getSocket(), Initialization.getInput(), Initialization.getOutput(), recordService.getPathVideo(), textID, videoView, ID.getText() + "");
+                        //  textID.setText("91");
+//                        Thread thread = new Thread(fromFile);
+//                        thread.start();
+//                        try {
+//                            thread.join();
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+                    } else {
+                        Intent captureIntent = projectionManager.createScreenCaptureIntent();
+                        startActivityForResult(captureIntent, RECORD_REQUEST_CODE);
+                    }
                 }
 
 
@@ -178,6 +159,14 @@ public class MainActivity extends AppCompatActivity {
                         Thread thread = new Thread(new Initialization(address.getText() + "", port.getText() + "", textID, yourId, mainActivity, videoView));
                         thread.start();
                         thread.join();
+                        pfd = ParcelFileDescriptor.fromSocket(Initialization.getSocket());
+                        KOKOKO.setPfd(pfd);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                socket = Initialization.getSocket();
+                            }
+                        });
                         isInit = true;
                         Toast.makeText(getApplicationContext(), "Ви ініціалізувалися на сервері", Toast.LENGTH_SHORT).show();
                     }
@@ -193,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
-
+    ParcelFileDescriptor pfd;
 
     @Override
     protected void onDestroy() {
@@ -217,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
             recordService.setMediaProject(mediaProjection);
             recordService.startRecord();
             isFirstDone = true;
-            textID.setText(R.string.stop_record);
+      //      textID.setText(R.string.stop_record);
         }
     }
     @Override

@@ -114,6 +114,9 @@ public class Fromfile implements Runnable{
         System.arraycopy(b, 0, t, a.length, b.length);
         return t;
     }
+    public void clear(){
+
+    }
     @Override
     public synchronized void run() {
         try {

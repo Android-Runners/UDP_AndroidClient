@@ -1,7 +1,7 @@
 package com.example.androidclientudp;
 
+import android.view.SurfaceView;
 import android.widget.TextView;
-import android.widget.VideoView;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -52,9 +52,9 @@ public class Initialization implements Runnable{
 
     private TextView yourId;
 
-    private VideoView videoView;
+    private SurfaceView videoView;
 
-    public Initialization(String address, String port, TextView textID, TextView yourId, MainActivity main, VideoView videoView) {
+    public Initialization(String address, String port, TextView textID, TextView yourId, MainActivity main, SurfaceView videoView) {
         this.address = address;
         this.port = port;
         this.textID = textID;
@@ -89,7 +89,7 @@ public class Initialization implements Runnable{
             myId = (Integer)input.readObject();
             changeText("Вас зареєстровано на сервері");
             changeTextID("Ваш ID:\n" + myId);
-            new Thread(new Resender(input, output, textID, videoView, socket, main)).start();
+//            new Thread(new Resender(input, output, textID, videoView, socket, main)).start();
         }catch(Exception e){
             changeText(e.getMessage());
         }

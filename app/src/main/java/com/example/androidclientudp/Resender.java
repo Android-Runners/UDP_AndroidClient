@@ -2,19 +2,18 @@ package com.example.androidclientudp;
 
 import android.app.AlertDialog;
 import android.graphics.Bitmap;
-import android.net.Uri;
-import android.os.Environment;
+import android.media.MediaPlayer;
+import android.os.ParcelFileDescriptor;
+import android.view.SurfaceView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.VideoView;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramSocket;
 import java.net.Socket;
-import java.util.Date;
 
 public class Resender implements Runnable {
     private DatagramSocket datagramSocket;
@@ -23,7 +22,7 @@ public class Resender implements Runnable {
     private MainActivity main;
     private byte[] receiveData = new byte[1048576];
     private TextView textID;
-    private VideoView videoView;
+    private SurfaceView videoView;
     private ObjectInputStream input;
     private ObjectOutputStream output;
     private Socket socket;
@@ -33,13 +32,18 @@ public class Resender implements Runnable {
         this.textID = textID;
         this.videoView = videoView;
     }
-    public Resender(ObjectInputStream input, ObjectOutputStream output, TextView textID, VideoView videoView, Socket socket, MainActivity main) {
+    public Resender(ObjectInputStream input, ObjectOutputStream output, TextView textID, SurfaceView videoView, Socket socket, MainActivity main) {
         this.main = main;
         this.input = input;
         this.socket = socket;
         this.textID = textID;
         this.videoView = videoView;
         this.output = output;
+    }
+    public Resender(SurfaceView videoView, Socket socket, MainActivity main) {
+        this.main = main;
+        this.videoView = videoView;
+        this.socket = socket;
     }
     private void changeText(final String s){
         main.runOnUiThread(new Runnable() {
@@ -68,40 +72,52 @@ public class Resender implements Runnable {
     @Override
     public void run() {
         try {
-            while(true) {
-                Date date = new Date();
-                File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScreenRecord" + "/" + date.getTime() + ".mp4");
-                if (file.exists()) {
-                    file.delete();
-                    file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScreenRecord" + "/" + date.getTime() + ".mp4");
+            ParcelFileDescriptor pfd = ParcelFileDescriptor.fromSocket(socket);
+            main.runOnUiThread(() -> {
+                try {
+                    MediaPlayer mediaPlayer = new MediaPlayer();
+                    mediaPlayer.setDataSource(pfd.getFileDescriptor());
+                    mediaPlayer.prepare();
+                    mediaPlayer.start();
+                    mediaPlayer.setDisplay(videoView.getHolder());
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                file.createNewFile();
-                Object sizeOfFile = input.readObject();
-                //  if(!check(sizeOfFile)) {
-                String sizeString = new String((byte[]) sizeOfFile);
-                sizeOfFile = (Integer.valueOf(sizeString));
-                FileOutputStream fos = new FileOutputStream(file, false);
-                Integer sum = 0;
-                byte[] answerArray = null;
-                while (true) {
-                    Object toGet = input.readObject();
-                    //  if(!check(toGet)) {
-                    byte[] receiveByte = (byte[]) toGet;
-                    sum += receiveByte.length;
-                    if (sum == receiveByte.length)
-                        answerArray = receiveByte;
-                    else
-                        answerArray = concat(answerArray, receiveByte);
-                    if (sum >= (Integer) sizeOfFile)
-                        break;
-                }
-                fos.write(answerArray);
-                fos.flush();
-                fos.close();
-             //   changeText(file.length() + " name(Resender): " + file.getName());
-                playVideo(file.getAbsolutePath());
-
-            }
+            });
+//            while(true) {
+//                Date date = new Date();
+//                File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScreenRecord" + "/" + date.getTime() + ".mp4");
+//                if (file.exists()) {
+//                    file.delete();
+//                    file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScreenRecord" + "/" + date.getTime() + ".mp4");
+//                }
+//                file.createNewFile();
+//                Object sizeOfFile = input.readObject();
+//                //  if(!check(sizeOfFile)) {
+//                String sizeString = new String((byte[]) sizeOfFile);
+//                sizeOfFile = (Integer.valueOf(sizeString));
+//                FileOutputStream fos = new FileOutputStream(file, false);
+//                Integer sum = 0;
+//                byte[] answerArray = null;
+//                while (true) {
+//                    Object toGet = input.readObject();
+//                    //  if(!check(toGet)) {
+//                    byte[] receiveByte = (byte[]) toGet;
+//                    sum += receiveByte.length;
+//                    if (sum == receiveByte.length)
+//                        answerArray = receiveByte;
+//                    else
+//                        answerArray = concat(answerArray, receiveByte);
+//                    if (sum >= (Integer) sizeOfFile)
+//                        break;
+//                }
+//                fos.write(answerArray);
+//                fos.flush();
+//                fos.close();
+//             //   changeText(file.length() + " name(Resender): " + file.getName());
+//                playVideo(file.getAbsolutePath());
+//
+//            }
         }catch(Exception e){}
     }
 
@@ -117,16 +133,16 @@ public class Resender implements Runnable {
         return bytes;
     }
 
-    private void playVideo(final String path){
-        main.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                videoView.setVideoURI(Uri.parse(path));
-                videoView.requestFocus();
-                videoView.start();
-            }
-        });
-    }
+//    private void playVideo(final String path){
+//        main.runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                videoView.setVideoURI(Uri.parse(path));
+//                videoView.requestFocus();
+//                videoView.start();
+//            }
+//        });
+//    }
     private void changeIm(final Bitmap bitmap){
         main.runOnUiThread(new Runnable() {
             @Override

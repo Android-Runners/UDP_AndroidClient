@@ -1,5 +1,6 @@
 package com.example.androidclientudp;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Intent;
 import android.hardware.display.DisplayManager;
@@ -10,8 +11,8 @@ import android.os.Binder;
 import android.os.Environment;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Surface;
-import android.widget.Toast;
 
 import java.io.File;
 
@@ -69,17 +70,31 @@ public class RecordService extends Service {
     }
 
     public boolean startRecord() {
-        if (mediaProjection == null || running) {
-            return false;
-        }
+        try {
+            if (mediaProjection == null || running) {
+                return false;
+            }
 
-        initRecorder();
-        createVirtualDisplay();
-        mediaRecorder.start();
-        running = true;
+            initRecorder();
+            createVirtualDisplay();
+            mediaRecorder.start();
+            running = true;
+        }catch(Throwable t){
+                Log.e("", t.getMessage());
+            }
         return true;
     }
-    public boolean startRecord2(){
+    @SuppressLint("NewApi")
+    public boolean resumeRec(){
+        mediaRecorder.resume();
+        return true;
+    }
+    @SuppressLint("NewApi")
+    public boolean pauseRec(){
+        mediaRecorder.pause();
+        return true;
+    }
+    public boolean stopRecord2(){
         if (mediaProjection == null || running) {
             return false;
         }
@@ -117,7 +132,8 @@ public class RecordService extends Service {
         mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP); // формат получаевомого файла записи
         nameVideo = System.currentTimeMillis() + ".mp4";
         pathVideo = getsaveDirectory() + nameVideo;
-        mediaRecorder.setOutputFile(pathVideo); // Целевое местоположение и имя файла записи
+        // TODO: KOKOKO
+        mediaRecorder.setOutputFile(KOKOKO.getPfd().getFileDescriptor()); // Целевое местоположение и имя файла записи
         mediaRecorder.setVideoSize(width, height); // размер видео
         mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264); // Кодировщик видео
    //     mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB); // кодировщик аудио
@@ -142,7 +158,7 @@ public class RecordService extends Service {
                 }
             }
 
-            Toast.makeText(getApplicationContext(), "Запис екрану розпочато", Toast.LENGTH_SHORT).show();
+          //  Toast.makeText(getApplicationContext(), "Запис екрану розпочато", Toast.LENGTH_SHORT).show();
 
             return rootDir;
         } else {
